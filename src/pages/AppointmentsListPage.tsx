@@ -75,7 +75,7 @@ export function AppointmentsListPage() {
         </div>
       </div>
 
-      <FeedbackMessage type="error" message={error || undefined} />
+      <FeedbackMessage type="error" message={error || ''} />
 
       {isLoading ? (
         <div className="center-message">Loading appointments...</div>

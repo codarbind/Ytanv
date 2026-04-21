@@ -98,7 +98,7 @@ export function CoursesCreatePage() {
             />
           </label>
 
-          <FeedbackMessage type="error" message={error || undefined} />
+          <FeedbackMessage type="error" message={error || ''} />
           <FeedbackMessage type="success" message={successMessage} />
 
           <button
