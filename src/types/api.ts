@@ -1,5 +1,21 @@
 export type UserRole = 'USER' | 'ADMIN' | 'PRACTITIONER';
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export interface AuthResponse {
   accessToken: string;
   userId: string;
@@ -18,9 +34,15 @@ export interface Course {
   id: string;
   title: string;
   description: string;
-  price: string;
+  price: number;
   createdById: string;
   createdAt: string;
+}
+
+export interface CreateCoursePayload {
+  title: string;
+  description: string;
+  price: number;
 }
 
 export interface Enrollment {
@@ -29,6 +51,7 @@ export interface Enrollment {
   courseId: string;
   status: 'ACTIVE' | 'COMPLETED';
   createdAt: string;
+  course?: Course; // Optional populated course data
 }
 
 export interface Practitioner {
@@ -41,13 +64,25 @@ export interface Practitioner {
 export interface Appointment {
   id: string;
   userId: string;
-  practitionerId: string;
+  practitionerId: string | null;
   dateTime: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+  status: 'PENDING' | 'ASSIGNED' | 'CANCELLED' | 'COMPLETED';
   createdAt: string;
+  practitioner?: Practitioner; // Optional populated practitioner data
+  user?: { id: string; username: string }; // Optional populated user data for admin view
 }
 
 export interface CreateAppointmentPayload {
+  practitionerId?: string;
+  dateTime: string;
+}
+
+export interface AdminCreateAppointmentPayload {
+  userId: string;
   practitionerId: string;
   dateTime: string;
+}
+
+export interface AssignPractitionerPayload {
+  practitionerId: string;
 }

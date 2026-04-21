@@ -27,14 +27,46 @@ export function AppShell() {
           to="/courses"
           className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
         >
-          Courses
+          Browse Courses
         </NavLink>
+        {user?.role === 'ADMIN' && (
+          <NavLink
+            to="/courses/create"
+            className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+          >
+            Create Course
+          </NavLink>
+        )}
         <NavLink
-          to="/appointments"
+          to="/enrollments"
           className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
         >
-          Appointments
+          My Enrollments
         </NavLink>
+        {user?.role === 'USER' && (
+          <NavLink
+            to="/appointments"
+            className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+          >
+            Book Appointment
+          </NavLink>
+        )}
+        {user?.role === 'ADMIN' && (
+          <>
+            <NavLink
+              to="/appointments/list"
+              className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+            >
+              View Appointments
+            </NavLink>
+            <NavLink
+              to="/appointments/create-for-user"
+              className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+            >
+              Create Appointment
+            </NavLink>
+          </>
+        )}
       </nav>
 
       <main className="page-content">

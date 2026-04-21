@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { getApiErrorMessage } from '../api/axios';
-import { createAppointment, fetchPractitioners } from '../api/services';
+import { useAuth } from '../context/AuthContext';
+import { useAppointments } from '../context/AppointmentsContext';
+import { fetchPractitioners } from '../api/services';
 import { FeedbackMessage } from '../components/FeedbackMessage';
+import { ProtectedRoute } from '../components/ProtectedRoute';
 import type { Practitioner } from '../types/api';
 
 const fallbackPractitioners: Practitioner[] = [
@@ -26,12 +28,13 @@ function toDateTimeLocalValue(date: Date) {
 }
 
 export function AppointmentPage() {
+  const { user } = useAuth();
+  const { createNewAppointment, error, clearError } = useAppointments();
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [selectedPractitionerId, setSelectedPractitionerId] = useState('');
   const [dateTime, setDateTime] = useState(toDateTimeLocalValue(new Date()));
   const [isLoadingPractitioners, setIsLoadingPractitioners] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
@@ -40,11 +43,11 @@ export function AppointmentPage() {
         setIsLoadingPractitioners(true);
         const data = await fetchPractitioners();
         const availablePractitioners = data.length > 0 ? data : fallbackPractitioners;
-        setPractitioners(availablePractitioners);
-        setSelectedPractitionerId(availablePractitioners[0]?.id ?? '');
+        // setPractitioners(availablePractitioners);
+        // setSelectedPractitionerId(availablePractitioners[0]?.id ?? '');
       } catch {
-        setPractitioners(fallbackPractitioners);
-        setSelectedPractitionerId(fallbackPractitioners[0].id);
+        // setPractitioners(fallbackPractitioners);
+        //setSelectedPractitionerId(fallbackPractitioners[0].id);
       } finally {
         setIsLoadingPractitioners(false);
       }
@@ -58,33 +61,36 @@ export function AppointmentPage() {
       return 'Loading practitioners...';
     }
 
-    return 'Choose a practitioner and preferred appointment time.';
+    return 'Choose your preferred appointment time.';
   }, [isLoadingPractitioners]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
-    setErrorMessage('');
     setSuccessMessage('');
+    clearError();
 
     try {
       const payload = {
-        practitionerId: selectedPractitionerId,
+        // practitionerId: selectedPractitionerId,
         dateTime: new Date(dateTime).toISOString(),
       };
-      const result = await createAppointment(payload);
-      setSuccessMessage(
-        `Appointment created successfully. Status: ${result.status}.`,
-      );
+      const result = await createNewAppointment(payload);
+      if (result.success) {
+        setSuccessMessage(result.message);
+        // Reset form
+        setDateTime(toDateTimeLocalValue(new Date()));
+      }
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error));
+      // Error is handled in context
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <section>
+    <ProtectedRoute allowedRoles={['USER']}>
+      <section>
       <div className="section-header">
         <div>
           <p className="eyebrow">Appointments</p>
@@ -95,7 +101,7 @@ export function AppointmentPage() {
       <form className="form-card appointment-form" onSubmit={handleSubmit}>
         <p className="helper-text">{helperText}</p>
 
-        <label className="field">
+        {/* <label className="field">
           <span>Practitioner</span>
           <select
             value={selectedPractitionerId}
@@ -109,7 +115,7 @@ export function AppointmentPage() {
               </option>
             ))}
           </select>
-        </label>
+        </label> */}
 
         <label className="field">
           <span>Date and time</span>
@@ -121,7 +127,7 @@ export function AppointmentPage() {
           />
         </label>
 
-        <FeedbackMessage type="error" message={errorMessage} />
+        <FeedbackMessage type="error" message={error || ''} />
         <FeedbackMessage type="success" message={successMessage} />
 
         <button
@@ -133,5 +139,6 @@ export function AppointmentPage() {
         </button>
       </form>
     </section>
+    </ProtectedRoute>
   );
 }

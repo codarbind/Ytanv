@@ -1,42 +1,29 @@
 import { useEffect, useState } from 'react';
-import { getApiErrorMessage } from '../api/axios';
-import { enrollInCourse, fetchCourses } from '../api/services';
+import { useCourses } from '../context/CoursesContext';
+import { useEnrollments } from '../context/EnrollmentsContext';
 import { FeedbackMessage } from '../components/FeedbackMessage';
-import type { Course } from '../types/api';
+
 
 export function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const { courses, isLoading, error: coursesError, fetchCoursesList } = useCourses();
+  const { enrollInCourseById, error: enrollError } = useEnrollments();
   const [successMessage, setSuccessMessage] = useState('');
   const [pendingCourseId, setPendingCourseId] = useState<string | null>(null);
-console.log({ courses, isLoading, errorMessage, successMessage, pendingCourseId });
   useEffect(() => {
-    async function loadCourses() {
-      try {
-        setIsLoading(true);
-        const data = await fetchCourses();
-        setCourses(data);
-      } catch (error) {
-        setErrorMessage(getApiErrorMessage(error));
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadCourses();
+    fetchCoursesList(1, 100); // Fetch first page with large limit for courses list
   }, []);
 
   async function handleEnroll(courseId: string) {
     setPendingCourseId(courseId);
-    setErrorMessage('');
     setSuccessMessage('');
 
     try {
-      const enrollment = await enrollInCourse(courseId);
-      setSuccessMessage(`Enrollment successful. Status: ${enrollment.status}.`);
+      const result = await enrollInCourseById(courseId);
+      if (result.success) {
+        setSuccessMessage(result.message);
+      }
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error));
+      // Error handled in context
     } finally {
       setPendingCourseId(null);
     }
@@ -51,12 +38,12 @@ console.log({ courses, isLoading, errorMessage, successMessage, pendingCourseId 
         </div>
       </div>
 
-      <FeedbackMessage type="error" message={errorMessage} />
+      <FeedbackMessage type="error" message={coursesError || enrollError || ''} />
       <FeedbackMessage type="success" message={successMessage} />
 
       {isLoading ? (
         <div className="center-message">Loading courses...</div>
-      ) : courses.length === 0 ? (
+      ) : !courses || courses.length === 0 ? (
         <div className="empty-state">No courses available right now.</div>
       ) : (
         <div className="card-grid">
