@@ -1,0 +1,45 @@
+import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export function AppShell() {
+  const { user, logout } = useAuth();
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div>
+          <p className="eyebrow">Vanty Platform</p>
+          <h1>Learning and Booking Dashboard</h1>
+        </div>
+        <div className="topbar-actions">
+          <div className="user-chip">
+            <span>{user?.username}</span>
+            <small>{user?.role}</small>
+          </div>
+          <button className="secondary-button" onClick={logout}>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <nav className="tabs">
+        <NavLink
+          to="/courses"
+          className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+        >
+          Courses
+        </NavLink>
+        <NavLink
+          to="/appointments"
+          className={({ isActive }) => (isActive ? 'tab active' : 'tab')}
+        >
+          Appointments
+        </NavLink>
+      </nav>
+
+      <main className="page-content">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
